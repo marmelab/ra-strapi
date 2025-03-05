@@ -1,4 +1,4 @@
-import { DataProvider, UpdateParams, fetchUtils } from "react-admin";
+import { CreateParams, DataProvider, UpdateParams, fetchUtils } from "react-admin";
 const POPULATE_ALL = "populate=*";
 const OPERATORS = {
   _gte: "$gte",
@@ -104,7 +104,7 @@ const curateData = (data: any) => {
   return curatedData;
 };
 
-const toStrapiBody = (params: UpdateParams) => {
+const toStrapiBody = (params: UpdateParams | CreateParams) => {
   const { data, multimedia } = Object.entries(curateData(params.data)).reduce(
     (acc, [key, value]) => {
       if (isMultimedia(value)) {
@@ -145,7 +145,7 @@ const toStrapiBody = (params: UpdateParams) => {
     formData.append("data", JSON.stringify(data));
     return formData;
   }
-  return JSON.stringify({data});
+  return JSON.stringify({ data });
 };
 
 export type StrapiDataProviderConf = {
@@ -176,7 +176,9 @@ export const strapiDataProvider = (
       }
       const queryStringify = fetchUtils.queryParameters(query);
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
-      const { data, meta } = await fetchUtils.fetchJson((url)).then((res) => res.json);
+      const { data, meta } = await fetchUtils
+        .fetchJson(url)
+        .then((res) => res.json);
 
       return {
         data: data.map(toRaRecord),
@@ -208,7 +210,9 @@ export const strapiDataProvider = (
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
       console.log(`getManyReference: ${url}`);
 
-      const { data, meta } = await fetchUtils.fetchJson(url).then((res) => res.json);
+      const { data, meta } = await fetchUtils
+        .fetchJson(url)
+        .then((res) => res.json);
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
@@ -232,28 +236,60 @@ export const strapiDataProvider = (
     update: async (resource, params) => {
       const strapiUpdateParam = toStrapiBody(params);
       const url = `${API_URL}/${resource}/${params.id}`;
-      console.log(`update: ${url}`, strapiUpdateParam);
-      const { data } = await fetchUtils.fetchJson(url, {
-        method: "PUT",
-        body: strapiUpdateParam,
-      }).then((res) => res.json);
+
+      const { data } = await fetchUtils
+        .fetchJson(url, {
+          method: "PUT",
+          body: strapiUpdateParam,
+        })
+        .then((res) => res.json);
 
       return { data: toRaRecord(data) };
     },
-    create: async (resource, { data, meta }) => {
-      const createdData = {};
+    create: async (resource, params) => {
+      const strapiUpdateParam = toStrapiBody(params);
+      const url = `${API_URL}/${resource}`;
+
+      const { data: createdData } = await fetchUtils
+        .fetchJson(url, {
+          method: "POST",
+          body: strapiUpdateParam,
+        })
+        .then((res) => res.json);
 
       return { data: toRaRecord(createdData) };
     },
     delete: async (resource, { id }) => {
+      const url = `${API_URL}/${resource}/${id}`;
+      await fetchUtils
+        .fetchJson(url, {
+          method: "DELETE",
+        });
       return { data: { id } } as any;
     },
     deleteMany: async (resource, { ids }) => {
+      await Promise.all(
+        ids.map((id) =>
+          fetchUtils.fetchJson(`${API_URL}/${resource}/${id}`, {
+            method: "DELETE",
+          })
+        )
+      );
       return { data: ids.map((id) => ({ id })) } as any;
     },
-    updateMany: async (resource, { ids, data, meta }) => {
-      const updatedData = [];
-      return { data: updatedData.map(toRaRecord) };
+    updateMany: async (resource, params) => {
+      const updatedData = await Promise.all(
+        params.ids.map(async (id) => {
+          const { data } = await fetchUtils
+            .fetchJson(`${API_URL}/${resource}/${id}`, {
+              method: "PUT",
+              body: JSON.stringify(params.data),
+            })
+            .then((res) => res.json);
+          return data.documentId;
+        })
+      );
+      return { data: updatedData };
     },
     supportAbortSignal: false,
   };
