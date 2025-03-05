@@ -1,6 +1,4 @@
-import { DataProvider, GetListParams } from "react-admin";
-import qs from "qs";
-
+import { DataProvider, UpdateParams, fetchUtils } from "react-admin";
 const POPULATE_ALL = "populate=*";
 const OPERATORS = {
   _gte: "$gte",
@@ -50,13 +48,13 @@ const toRaAttributes = (attributes: any) => {
   return attributes;
 };
 
-const raFilterToStrapi = (raFilter: any) => {
+const toStrapiFilter = (raFilter: any) => {
   if (!raFilter) return null;
   let filters: any = {};
 
   Object.keys(raFilter).forEach((key) => {
     if (typeof raFilter[key] === "object") {
-      return (filters[key] = raFilterToStrapi(raFilter[key]));
+      return (filters[key] = toStrapiFilter(raFilter[key]));
     }
 
     const operator = OPERATORS[key.slice(-4) as keyof typeof OPERATORS];
@@ -84,6 +82,72 @@ const raFilterToStrapi = (raFilter: any) => {
   return filters;
 };
 
+const isMultimedia = (value: any) => {
+  return (
+    (value && value.hasOwnProperty("rawFile")) ||
+    (Array.isArray(value) &&
+      value.length > 0 &&
+      (value[0].hasOwnProperty("rawFile") || value[0].hasOwnProperty("mime")))
+  );
+};
+
+const curateData = (data: any) => {
+  const {
+    id,
+    ref,
+    createdAt,
+    publishedAt,
+    updatedAt,
+    documentId,
+    ...curatedData
+  } = data;
+  return curatedData;
+};
+
+const toStrapiBody = (params: UpdateParams) => {
+  const { data, multimedia } = Object.entries(curateData(params.data)).reduce(
+    (acc, [key, value]) => {
+      if (isMultimedia(value)) {
+        if (!acc.multimedia) {
+          acc.multimedia = {};
+        }
+        acc.multimedia[key] = value;
+        return acc;
+      }
+      acc.data[key] = value === "" ? null : value;
+      return acc;
+    },
+    { data: {}, multimedia: null }
+  );
+
+  if (multimedia) {
+    const formData = new FormData();
+    Object.entries(multimedia).forEach(([key, value]: [string, any]) => {
+      if (Array.isArray(value)) {
+        const elementIds = [];
+        value.forEach((file) => {
+          file.rawFile instanceof File
+            ? formData.append(`files.${key}`, file.rawFile, file.title)
+            : elementIds.push(file.id);
+        });
+        data[key] = elementIds;
+        return;
+      }
+      if (value.rawFile instanceof File) {
+        formData.append(`files.${key}`, value.rawFile, value.title);
+        return;
+      }
+      if (!(value.rawFile instanceof File) && data.hasOwnProperty(key)) {
+        data[key] = [value.id];
+      }
+    });
+
+    formData.append("data", JSON.stringify(data));
+    return formData;
+  }
+  return JSON.stringify({data});
+};
+
 export type StrapiDataProviderConf = {
   baseURL: string;
   authToken: string;
@@ -108,13 +172,11 @@ export const strapiDataProvider = (
         };
       }
       if (filter) {
-        query.filter = raFilterToStrapi(filter);
+        query.filter = toStrapiFilter(filter);
       }
-      const queryStringify = qs.stringify(query, {
-        encodeValuesOnly: true,
-      });
+      const queryStringify = fetchUtils.queryParameters(query);
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
-      const { data, meta } = await fetch(url).then((res) => res.json());
+      const { data, meta } = await fetchUtils.fetchJson((url)).then((res) => res.json);
 
       return {
         data: data.map(toRaRecord),
@@ -136,25 +198,22 @@ export const strapiDataProvider = (
         };
       }
       if (filter) {
-        query.filter = raFilterToStrapi(
-          {
-            ...filter,
-            [target.split(".").join("][")]: id,
-          });
+        query.filter = toStrapiFilter({
+          ...filter,
+          [target.split(".").join("][")]: id,
+        });
       }
 
-      const queryStringify = qs.stringify(query, {
-        encodeValuesOnly: true,
-      });
+      const queryStringify = fetchUtils.queryParameters(query);
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
       console.log(`getManyReference: ${url}`);
 
-      const { data, meta } = await fetch(url).then((res) => res.json());
+      const { data, meta } = await fetchUtils.fetchJson(url).then((res) => res.json);
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
       const url = `${API_URL}/${resource}/${id}`;
-      const { data } = await fetch(url).then((res) => res.json());
+      const { data } = await fetchUtils.fetchJson(url).then((res) => res.json);
       return { data: toRaRecord(data) };
     },
     getMany: async (resource, { ids }) => {
@@ -165,16 +224,21 @@ export const strapiDataProvider = (
           },
         },
       };
-      const queryStringify = qs.stringify(query, {
-        encodeValuesOnly: true,
-      });
+      const queryStringify = fetchUtils.queryParameters(query);
       const url = `${API_URL}/${resource}?${queryStringify}`;
-      const { data } = await fetch(url).then((res) => res.json());
+      const { data } = await fetchUtils.fetchJson(url).then((res) => res.json);
       return { data: data.map(toRaRecord) };
     },
-    update: async (resource, { id, data, meta }) => {
-      const updatedData = {};
-      return { data: toRaRecord(updatedData) };
+    update: async (resource, params) => {
+      const strapiUpdateParam = toStrapiBody(params);
+      const url = `${API_URL}/${resource}/${params.id}`;
+      console.log(`update: ${url}`, strapiUpdateParam);
+      const { data } = await fetchUtils.fetchJson(url, {
+        method: "PUT",
+        body: strapiUpdateParam,
+      }).then((res) => res.json);
+
+      return { data: toRaRecord(data) };
     },
     create: async (resource, { data, meta }) => {
       const createdData = {};
