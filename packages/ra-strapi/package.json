@@ -1,0 +1,36 @@
+{
+  "name": "ra-strapi",
+  "version": "1.0.0",
+  "repository": "git@github.com:marmelab/ra-strapi.git",
+  "private": true,
+  "author": "Guillaume BILLEY",
+  "license": "MIT",
+  "description": "Data provider for React Admin using Strapi",
+  "files": [
+    "*.md",
+    "lib",
+    "esm",
+    "src"
+  ],
+  "type": "module",
+  "main": "lib/index",
+  "module": "esm/index.js",
+  "types": "esm/index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "peerDependencies": {
+    "react-admin": "^5.0.0"
+  },
+  "devDependencies": {
+    "react-admin": "^5.0.0"
+  },
+  "scripts": {
+    "build": "yarn run build-cjs && yarn run build-esm",
+    "build-cjs": "rimraf ./lib && tsc",
+    "build-esm": "rimraf ./esm && tsc --outDir esm --module es2015",
+    "watch": "tsc --outDir esm --module es2015 --watch",
+    "lint": "eslint --fix ./src"
+  }
+}
