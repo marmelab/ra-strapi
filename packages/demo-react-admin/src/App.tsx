@@ -8,15 +8,17 @@ import {
 import { Layout } from "./Layout";
 import { authProvider } from "./authProvider";
 import { strapiDataProvider } from "ra-strapi";
+import authors from "./authors";
 
 
 export const App = () => (
-  <Admin layout={Layout} authProvider={authProvider} dataProvider={strapiDataProvider({baseURL: 'http://localhost:1337/api', authToken:''})}>
+  <Admin layout={Layout} authProvider={authProvider} dataProvider={strapiDataProvider({baseURL: 'http://localhost:1337', authToken:''})}>
     <Resource
       name="articles"
       list={ListGuesser}
       edit={EditGuesser}
       show={ShowGuesser}
+      recordRepresentation={"title"}
     />
     <Resource
       name="categories"
@@ -26,7 +28,7 @@ export const App = () => (
     />
     <Resource
       name="authors"
-      list={ListGuesser}
+      list={authors.List}
       edit={EditGuesser}
       show={ShowGuesser}
     />

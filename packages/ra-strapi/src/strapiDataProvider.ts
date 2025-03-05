@@ -1,7 +1,6 @@
 import { DataProvider, GetListParams } from "react-admin";
 import qs from "qs";
 
-
 const POPULATE_ALL = "populate=*";
 const OPERATORS = {
   _gte: "$gte",
@@ -14,7 +13,7 @@ type StrapiPagination = {
   page: number;
   pageSize: number;
 };
-export type StrapiGetListParams = {
+type StrapiGetListParams = {
   pagination?: StrapiPagination;
   sort?: string[];
   filter?: any;
@@ -35,11 +34,11 @@ const toRaAttributes = (attributes: any) => {
     if (!data) return;
     // it's an strapi object
     if (data.documentId) {
-      attributes[key] = toRaRecord(data);
+      attributes[key] = data.documentId;
     }
     // it's an array of strapi objects
     if (Array.isArray(data) && data.length > 0 && data[0]?.documentId) {
-      attributes[key] = data.map((item: any) => toRaRecord(item));
+      attributes[key] = data.map((item: any) => item.documentId);
     }
   });
 
@@ -87,41 +86,34 @@ export type StrapiDataProviderConf = {
 export const strapiDataProvider = (
   config: StrapiDataProviderConf
 ): Required<DataProvider> => {
+  const API_URL = `${config.baseURL}/api`;
+  const UPLOADS_URL = `${config.baseURL}/uploads`;
   return {
     getList: async (resource, { pagination, sort, filter }) => {
       const { page = 1, perPage = 10 } = pagination ?? {};
-
       const query: StrapiGetListParams = {};
-      //     pagination: {
-      //       page,
-      //       pageSize: perPage,
-      //     },
-      //     filters: raFilterToStrapi(params.filter),
-      //   };
 
       if (sort) {
         query.sort = [`${sort.field}:${sort.order}`];
       }
       if (pagination) {
         query.pagination = {
-            page,
-            pageSize: perPage,
-        }
+          page,
+          pageSize: perPage,
+        };
       }
       if (filter) {
         query.filter = raFilterToStrapi(filter);
       }
-
       const queryStringify = qs.stringify(query, {
         encodeValuesOnly: true,
       });
+      const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
+      const { data, meta } = await fetch(url).then((res) => res.json());
 
-      const url = `${config.baseURL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
-      const response = await fetch(url);
-      const json = await response.json();
       return {
-        data: json.data.map(toRaRecord),
-        total: json.meta.pagination.total,
+        data: data.map(toRaRecord),
+        total: meta.pagination.total,
       };
     },
     getManyReference: async (
@@ -134,10 +126,9 @@ export const strapiDataProvider = (
       return { data: [].map(toRaRecord), total };
     },
     getOne: async (resource, { id }) => {
-      const url = `${config.baseURL}/${resource}/${id}`;
-      const response = await fetch(url);
-      const json = await response.json();
-      return { data: toRaRecord(json.data) };
+      const url = `${API_URL}/${resource}/${id}`;
+      const { data } = await fetch(url).then((res) => res.json());
+      return { data: toRaRecord(data) };
     },
     update: async (resource, { id, data, meta }) => {
       const updatedData = {};
@@ -155,7 +146,18 @@ export const strapiDataProvider = (
       return { data: ids.map((id) => ({ id })) } as any;
     },
     getMany: async (resource, { ids }) => {
-      const data = [];
+      const query = {
+        filters: {
+          documentId: {
+            $in: ids,
+          },
+        },
+      };
+      const queryStringify = qs.stringify(query, {
+        encodeValuesOnly: true,
+      });
+      const url = `${API_URL}/${resource}?${queryStringify}`;
+      const { data } = await fetch(url).then((res) => res.json());
       return { data: data.map(toRaRecord) };
     },
     updateMany: async (resource, { ids, data, meta }) => {
