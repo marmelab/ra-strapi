@@ -1,4 +1,4 @@
-import { ChipField, Datagrid, DateField, EmailField, List, NumberField, ReferenceArrayField, SingleFieldList, TextField } from 'react-admin';
+import { Datagrid, DateField, EmailField, List, NumberField, ReferenceManyField, SingleFieldList, TextField } from 'react-admin';
 
 export const AuthorList = () => (
     <List>
@@ -10,9 +10,9 @@ export const AuthorList = () => (
             <DateField source="updatedAt" />
             <DateField source="publishedAt" />
             <TextField source="avatar.id" />
-            <ReferenceArrayField source="articles" reference="articles">
+            <ReferenceManyField reference="articles" target="author.documentId">
                 <SingleFieldList/>
-            </ReferenceArrayField>
+            </ReferenceManyField>
         </Datagrid>
     </List>
 );

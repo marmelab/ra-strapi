@@ -13,7 +13,12 @@ type StrapiPagination = {
   page: number;
   pageSize: number;
 };
-type StrapiGetListParams = {
+type StrapiGetListQuery = {
+  pagination?: StrapiPagination;
+  sort?: string[];
+  filter?: any;
+};
+type StrapiGetManyReferenceQuery = {
   pagination?: StrapiPagination;
   sort?: string[];
   filter?: any;
@@ -91,7 +96,7 @@ export const strapiDataProvider = (
   return {
     getList: async (resource, { pagination, sort, filter }) => {
       const { page = 1, perPage = 10 } = pagination ?? {};
-      const query: StrapiGetListParams = {};
+      const query: StrapiGetListQuery = {};
 
       if (sort) {
         query.sort = [`${sort.field}:${sort.order}`];
@@ -120,30 +125,37 @@ export const strapiDataProvider = (
       resource,
       { target, id, pagination, sort, filter }
     ) => {
-      const { page = 1, perPage = 10 } = pagination ?? {};
-      const total = 0;
+      const query: StrapiGetManyReferenceQuery = {};
+      if (sort) {
+        query.sort = [`${sort.field}:${sort.order}`];
+      }
+      if (pagination) {
+        query.pagination = {
+          page: pagination.page,
+          pageSize: pagination.perPage,
+        };
+      }
+      if (filter) {
+        query.filter = raFilterToStrapi(
+          {
+            ...filter,
+            [target.split(".").join("][")]: id,
+          });
+      }
 
-      return { data: [].map(toRaRecord), total };
+      const queryStringify = qs.stringify(query, {
+        encodeValuesOnly: true,
+      });
+      const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
+      console.log(`getManyReference: ${url}`);
+
+      const { data, meta } = await fetch(url).then((res) => res.json());
+      return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
       const url = `${API_URL}/${resource}/${id}`;
       const { data } = await fetch(url).then((res) => res.json());
       return { data: toRaRecord(data) };
-    },
-    update: async (resource, { id, data, meta }) => {
-      const updatedData = {};
-      return { data: toRaRecord(updatedData) };
-    },
-    create: async (resource, { data, meta }) => {
-      const createdData = {};
-
-      return { data: toRaRecord(createdData) };
-    },
-    delete: async (resource, { id }) => {
-      return { data: { id } } as any;
-    },
-    deleteMany: async (resource, { ids }) => {
-      return { data: ids.map((id) => ({ id })) } as any;
     },
     getMany: async (resource, { ids }) => {
       const query = {
@@ -159,6 +171,21 @@ export const strapiDataProvider = (
       const url = `${API_URL}/${resource}?${queryStringify}`;
       const { data } = await fetch(url).then((res) => res.json());
       return { data: data.map(toRaRecord) };
+    },
+    update: async (resource, { id, data, meta }) => {
+      const updatedData = {};
+      return { data: toRaRecord(updatedData) };
+    },
+    create: async (resource, { data, meta }) => {
+      const createdData = {};
+
+      return { data: toRaRecord(createdData) };
+    },
+    delete: async (resource, { id }) => {
+      return { data: { id } } as any;
+    },
+    deleteMany: async (resource, { ids }) => {
+      return { data: ids.map((id) => ({ id })) } as any;
     },
     updateMany: async (resource, { ids, data, meta }) => {
       const updatedData = [];
