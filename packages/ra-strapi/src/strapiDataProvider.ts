@@ -21,32 +21,63 @@ type StrapiGetManyReferenceQuery = {
   sort?: string[];
   filter?: any;
 };
+const toRaRecordManager = (config) => {
 
-const toRaRecord = (data: any) => {
-  const { documentId, id, blocks, ...attributes } = data;
-  return {
-    id: documentId,
-    ref: id,
-    ...toRaAttributes(attributes),
-  };
-};
-
-const toRaAttributes = (attributes: any) => {
-  Object.keys(attributes).forEach((key: string) => {
-    const data = attributes[key];
+  const addBaseURLRecursively = (data) => {
     if (!data) return;
-    // it's an strapi object
-    if (data.documentId) {
-      attributes[key] = data.documentId;
+    if (Array.isArray(data)) {
+      return data.map((item) => addBaseURLRecursively(item));
     }
-    // it's an array of strapi objects
-    if (Array.isArray(data) && data.length > 0 && data[0]?.documentId) {
-      attributes[key] = data.map((item: any) => item.documentId);
+    if (data.hasOwnProperty("url")) {
+      const { url, ...rest } = data;
+      const updatedRest = Object.entries(rest).reduce((acc, [key, value]) => {
+        acc[key] = (typeof value === "object")? addBaseURLRecursively(value): value;
+        return acc;
+      },{});
+      return {
+        ...updatedRest,
+        url: url.includes("http") ? url : `${config.baseURL}${url}`,
+      };
     }
-  });
-
-  return attributes;
-};
+    return Object.entries(data).reduce((acc, [key, value]) => {
+      acc[key] = (typeof value === "object")? addBaseURLRecursively(value): value;
+      return acc;
+    },{});
+  }
+  const toRaAttributes = (attributes: any, config) => {
+    Object.keys(attributes).forEach((key: string) => {
+      const data = attributes[key];
+      if (!data) return;
+      if (data.hasOwnProperty("mime")) {
+        attributes[key] = addBaseURLRecursively(data);
+        return;
+      }
+      // it's an strapi object
+      if (data.hasOwnProperty("documentId")) {
+        attributes[key] = data.documentId;
+        return;
+      }
+      // it's an array of strapi objects
+      if (Array.isArray(data) && data.length > 0 && data[0]?.documentId) {
+        attributes[key] = data.map((item: any) => item.documentId);
+        return;
+      }
+      // else we keep the value as is
+    });
+  
+    return attributes;
+  };
+  return {
+    toRaRecord : (data: any) => {
+      const { documentId, id, blocks, ...attributes } = data;
+      return {
+        id: documentId,
+        ref: id,
+        ...toRaAttributes(attributes, config),
+      };
+    }  
+  }
+}
 
 const toStrapiFilter = (raFilter: any) => {
   if (!raFilter) return null;
@@ -157,6 +188,9 @@ export const strapiDataProvider = (
 ): Required<DataProvider> => {
   const API_URL = `${config.baseURL}/api`;
   const UPLOADS_URL = `${config.baseURL}/uploads`;
+
+  const { toRaRecord } = toRaRecordManager(config);
+
   return {
     getList: async (resource, { pagination, sort, filter }) => {
       const { page = 1, perPage = 10 } = pagination ?? {};
@@ -216,7 +250,7 @@ export const strapiDataProvider = (
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
-      const url = `${API_URL}/${resource}/${id}`;
+      const url = `${API_URL}/${resource}/${id}?${POPULATE_ALL}`;
       const { data } = await fetchUtils.fetchJson(url).then((res) => res.json);
       return { data: toRaRecord(data) };
     },
