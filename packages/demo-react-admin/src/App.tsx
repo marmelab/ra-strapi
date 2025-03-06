@@ -9,7 +9,7 @@ import articles from "./articles";
 import authors from "./authors";
 import categories from "./categories";
 
-const STRAPI_URL = "http://localhost:1337";
+const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
 
 export const App = () => (
   <Admin
