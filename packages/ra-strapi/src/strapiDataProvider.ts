@@ -1,3 +1,4 @@
+import qs from "qs";
 import {
   CreateParams,
   DataProvider,
@@ -211,6 +212,7 @@ export const strapiDataProvider = (
 
   return {
     getList: async (resource, { pagination, sort, filter }) => {
+      console.log(`GetList`, resource);
       const { page = 1, perPage = 10 } = pagination ?? {};
       const query: StrapiGetListQuery = {};
 
@@ -226,7 +228,7 @@ export const strapiDataProvider = (
       if (filter) {
         query.filter = toStrapiFilter(filter);
       }
-      const queryStringify = fetchUtils.queryParameters(query);
+      const queryStringify = qs.stringify(query);
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
       const { data, meta } = await fetchUtils
         .fetchJson(url, {
@@ -247,6 +249,7 @@ export const strapiDataProvider = (
       resource,
       { target, id, pagination, sort, filter }
     ) => {
+      console.log(`GetManyReference`, target, id);
       const query: StrapiGetManyReferenceQuery = {};
       if (sort) {
         query.sort = [`${sort.field}:${sort.order}`];
@@ -264,7 +267,7 @@ export const strapiDataProvider = (
         });
       }
 
-      const queryStringify = fetchUtils.queryParameters(query);
+      const queryStringify = qs.stringify(query);
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
       console.log(`getManyReference: ${url}`);
 
@@ -280,6 +283,7 @@ export const strapiDataProvider = (
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
+      console.log(`GetOne`, id);
       const url = `${API_URL}/${resource}/${id}?${POPULATE_ALL}`;
       const { data } = await fetchUtils
         .fetchJson(url, {
@@ -300,7 +304,9 @@ export const strapiDataProvider = (
           },
         },
       };
-      const queryStringify = fetchUtils.queryParameters(query);
+      const queryStringify = qs.stringify(query, {
+        encodeValuesOnly: true,
+      });
       const url = `${API_URL}/${resource}?${queryStringify}`;
       const { data } = await fetchUtils
         .fetchJson(url, {
@@ -310,7 +316,11 @@ export const strapiDataProvider = (
             }`,
           }),
         })
-        .then((res) => res.json);
+        .then((res) => res.json)
+        .catch((error) => {
+          console.error(error);
+          return { data: [] };
+        });
       return { data: data.map(toRaRecord) };
     },
     update: async (resource, params) => {
