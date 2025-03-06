@@ -44,6 +44,14 @@ Then go to http://localhost:8080 to use your React-admin app.
 
 Feel free to play around with this demo, to better understand its internals.
 
+## Improvements ideas
+
+Here is a list of some ideas to improve this data and auth provider.
+
+- Use [@strapi/client](https://docs.strapi.io/dev-docs/api/client) instead of using `fetch`
+- Get the permissions list from the api to implement the `getPermissions` of the authProvider (don't know how to...)
+- Find a way to update images.
+
 ## License
 
 This repository and the code it contains are licensed under the MIT License and sponsored by [marmelab](https://marmelab.com).
