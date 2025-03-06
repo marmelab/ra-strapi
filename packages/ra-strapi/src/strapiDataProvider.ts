@@ -21,12 +21,12 @@ type StrapiPagination = {
 type StrapiGetListQuery = {
   pagination?: StrapiPagination;
   sort?: string[];
-  filter?: any;
+  filters?: any;
 };
 type StrapiGetManyReferenceQuery = {
   pagination?: StrapiPagination;
   sort?: string[];
-  filter?: any;
+  filters?: any;
 };
 const useStrapiToRa = (config) => {
   const addBaseURLRecursively = (data) => {
@@ -225,9 +225,11 @@ export const strapiDataProvider = (
         };
       }
       if (filter) {
-        query.filter = toStrapiFilter(filter);
+        query.filters = toStrapiFilter(filter);
       }
-      const queryStringify = qs.stringify(query);
+      const queryStringify = qs.stringify(query, {
+        encodeValuesOnly: true,
+      });
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
       const { data, meta } = await fetchUtils
         .fetchJson(url, {
@@ -259,13 +261,17 @@ export const strapiDataProvider = (
         };
       }
       if (filter) {
-        query.filter = toStrapiFilter({
+        query.filters = toStrapiFilter({
           ...filter,
-          [target.split(".").join("][")]: id,
+          [target.split(".").join("][")]: {
+            documentId: id,
+          },
         });
       }
 
-      const queryStringify = qs.stringify(query);
+      const queryStringify = qs.stringify(query, {
+        encodeValuesOnly: true,
+      });
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
 
       const { data, meta } = await fetchUtils
