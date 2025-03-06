@@ -47,7 +47,6 @@ Finally, add a user and set its role to the "Authenticated" one : http://localho
 
 ### Using the Simple Demo
 
-
 Then go to http://localhost:8080 to use your React-admin app, you can connect to the app with the user you previously created.
 
 Feel free to play around with this demo, to better understand its internals.
