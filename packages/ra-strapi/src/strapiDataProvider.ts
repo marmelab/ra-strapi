@@ -181,13 +181,12 @@ const toStrapiBody = (params: UpdateParams | CreateParams) => {
 
 export type StrapiDataProviderConf = {
   baseURL: string;
-  authToken: string;
+  authToken?: string;
 };
 export const strapiDataProvider = (
   config: StrapiDataProviderConf
 ): Required<DataProvider> => {
   const API_URL = `${config.baseURL}/api`;
-  const UPLOADS_URL = `${config.baseURL}/uploads`;
 
   const { toRaRecord } = toRaRecordManager(config);
 
