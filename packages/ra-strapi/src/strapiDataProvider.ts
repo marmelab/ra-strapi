@@ -212,7 +212,6 @@ export const strapiDataProvider = (
 
   return {
     getList: async (resource, { pagination, sort, filter }) => {
-      console.log(`GetList`, resource);
       const { page = 1, perPage = 10 } = pagination ?? {};
       const query: StrapiGetListQuery = {};
 
@@ -249,7 +248,6 @@ export const strapiDataProvider = (
       resource,
       { target, id, pagination, sort, filter }
     ) => {
-      console.log(`GetManyReference`, target, id);
       const query: StrapiGetManyReferenceQuery = {};
       if (sort) {
         query.sort = [`${sort.field}:${sort.order}`];
@@ -269,7 +267,6 @@ export const strapiDataProvider = (
 
       const queryStringify = qs.stringify(query);
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
-      console.log(`getManyReference: ${url}`);
 
       const { data, meta } = await fetchUtils
         .fetchJson(url, {
@@ -283,7 +280,6 @@ export const strapiDataProvider = (
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
-      console.log(`GetOne`, id);
       const url = `${API_URL}/${resource}/${id}?${POPULATE_ALL}`;
       const { data } = await fetchUtils
         .fetchJson(url, {
