@@ -8,6 +8,8 @@ This repository contains:
 -   The actual `ra-strapi` package
 -   A simple demo app you can run locally to try out `ra-strapi`
 
+It is mainly inspired by https://github.com/garridorafa/ra-strapi-v4-rest
+
 ## Simple Demo
 
 ### Prerequesites
