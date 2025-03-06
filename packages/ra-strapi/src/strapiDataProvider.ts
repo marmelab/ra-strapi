@@ -1,4 +1,10 @@
-import { CreateParams, DataProvider, UpdateParams, fetchUtils } from "react-admin";
+import {
+  CreateParams,
+  DataProvider,
+  UpdateParams,
+  fetchUtils,
+} from "react-admin";
+import { STRAPI_JWT_KEY } from "./strapiAuthProvider";
 const POPULATE_ALL = "populate=*";
 const OPERATORS = {
   _gte: "$gte",
@@ -21,8 +27,7 @@ type StrapiGetManyReferenceQuery = {
   sort?: string[];
   filter?: any;
 };
-const toRaRecordManager = (config) => {
-
+const useStrapiToRa = (config) => {
   const addBaseURLRecursively = (data) => {
     if (!data) return;
     if (Array.isArray(data)) {
@@ -31,19 +36,21 @@ const toRaRecordManager = (config) => {
     if (data.hasOwnProperty("url")) {
       const { url, ...rest } = data;
       const updatedRest = Object.entries(rest).reduce((acc, [key, value]) => {
-        acc[key] = (typeof value === "object")? addBaseURLRecursively(value): value;
+        acc[key] =
+          typeof value === "object" ? addBaseURLRecursively(value) : value;
         return acc;
-      },{});
+      }, {});
       return {
         ...updatedRest,
         url: url.includes("http") ? url : `${config.baseURL}${url}`,
       };
     }
     return Object.entries(data).reduce((acc, [key, value]) => {
-      acc[key] = (typeof value === "object")? addBaseURLRecursively(value): value;
+      acc[key] =
+        typeof value === "object" ? addBaseURLRecursively(value) : value;
       return acc;
-    },{});
-  }
+    }, {});
+  };
   const toRaAttributes = (attributes: any, config) => {
     Object.keys(attributes).forEach((key: string) => {
       const data = attributes[key];
@@ -64,20 +71,20 @@ const toRaRecordManager = (config) => {
       }
       // else we keep the value as is
     });
-  
+
     return attributes;
   };
   return {
-    toRaRecord : (data: any) => {
+    toRaRecord: (data: any) => {
       const { documentId, id, blocks, ...attributes } = data;
       return {
         id: documentId,
         ref: id,
         ...toRaAttributes(attributes, config),
       };
-    }  
-  }
-}
+    },
+  };
+};
 
 const toStrapiFilter = (raFilter: any) => {
   if (!raFilter) return null;
@@ -183,12 +190,13 @@ export type StrapiDataProviderConf = {
   baseURL: string;
   authToken?: string;
 };
+
 export const strapiDataProvider = (
   config: StrapiDataProviderConf
 ): Required<DataProvider> => {
   const API_URL = `${config.baseURL}/api`;
 
-  const { toRaRecord } = toRaRecordManager(config);
+  const { toRaRecord } = useStrapiToRa(config);
 
   return {
     getList: async (resource, { pagination, sort, filter }) => {
@@ -210,7 +218,11 @@ export const strapiDataProvider = (
       const queryStringify = fetchUtils.queryParameters(query);
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
       const { data, meta } = await fetchUtils
-        .fetchJson(url)
+        .fetchJson(url, {
+          headers: new Headers({
+            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+          }),
+        })
         .then((res) => res.json);
 
       return {
@@ -244,13 +256,23 @@ export const strapiDataProvider = (
       console.log(`getManyReference: ${url}`);
 
       const { data, meta } = await fetchUtils
-        .fetchJson(url)
+        .fetchJson(url, {
+          headers: new Headers({
+            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+          }),
+        })
         .then((res) => res.json);
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
       const url = `${API_URL}/${resource}/${id}?${POPULATE_ALL}`;
-      const { data } = await fetchUtils.fetchJson(url).then((res) => res.json);
+      const { data } = await fetchUtils
+        .fetchJson(url, {
+          headers: new Headers({
+            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+          }),
+        })
+        .then((res) => res.json);
       return { data: toRaRecord(data) };
     },
     getMany: async (resource, { ids }) => {
@@ -263,7 +285,13 @@ export const strapiDataProvider = (
       };
       const queryStringify = fetchUtils.queryParameters(query);
       const url = `${API_URL}/${resource}?${queryStringify}`;
-      const { data } = await fetchUtils.fetchJson(url).then((res) => res.json);
+      const { data } = await fetchUtils
+        .fetchJson(url, {
+          headers: new Headers({
+            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+          }),
+        })
+        .then((res) => res.json);
       return { data: data.map(toRaRecord) };
     },
     update: async (resource, params) => {
@@ -274,6 +302,9 @@ export const strapiDataProvider = (
         .fetchJson(url, {
           method: "PUT",
           body: strapiUpdateParam,
+          headers: new Headers({
+            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+          }),
         })
         .then((res) => res.json);
 
@@ -287,6 +318,9 @@ export const strapiDataProvider = (
         .fetchJson(url, {
           method: "POST",
           body: strapiUpdateParam,
+          headers: new Headers({
+            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+          }),
         })
         .then((res) => res.json);
 
@@ -294,10 +328,12 @@ export const strapiDataProvider = (
     },
     delete: async (resource, { id }) => {
       const url = `${API_URL}/${resource}/${id}`;
-      await fetchUtils
-        .fetchJson(url, {
-          method: "DELETE",
-        });
+      await fetchUtils.fetchJson(url, {
+        method: "DELETE",
+        headers: new Headers({
+          Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+        }),
+      });
       return { data: { id } } as any;
     },
     deleteMany: async (resource, { ids }) => {
@@ -305,6 +341,9 @@ export const strapiDataProvider = (
         ids.map((id) =>
           fetchUtils.fetchJson(`${API_URL}/${resource}/${id}`, {
             method: "DELETE",
+            headers: new Headers({
+              Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+            }),
           })
         )
       );
@@ -317,6 +356,9 @@ export const strapiDataProvider = (
             .fetchJson(`${API_URL}/${resource}/${id}`, {
               method: "PUT",
               body: JSON.stringify(params.data),
+              headers: new Headers({
+                Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken }`,
+              }),
             })
             .then((res) => res.json);
           return data.documentId;

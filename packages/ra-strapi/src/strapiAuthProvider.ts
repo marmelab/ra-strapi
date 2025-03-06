@@ -1,7 +1,7 @@
 import { AuthProvider, fetchUtils } from "react-admin";
 
 const STRAPI_USER_KEY = "strapi_user";
-const STRAPI_JWT_KEY = "strapi_jwt";
+export const STRAPI_JWT_KEY = "strapi_jwt";
 
 export type StrapiAuthProviderParams = {
   baseURL: string;
