@@ -36,11 +36,19 @@ Install the dependencies and start the Demo App with the following command:
 make install start
 ```
 
+### Setup strapi
+
+Strapi should be up and running on http://localhost:1337 and should ask you to create an admin user, go for it.
+
+You now need to tune some permissions to allow a user to access, edit and delete `Articles`, `Authors`, and `Categories`.
+Change the "Authenticated" role (http://localhost:1337/admin/settings/users-permissions/roles/1) and check all the rights for those resources.
+
+Finally, add a user and set its role to the "Authenticated" one : http://localhost:1337/admin/content-manager/collection-types/plugin::users-permissions.user/create.
+
 ### Using the Simple Demo
 
-Now that all is configured and running, you can browse to http://localhost:1337 to create a strapi user, and to publish some data.
 
-Then go to http://localhost:8080 to use your React-admin app.
+Then go to http://localhost:8080 to use your React-admin app, you can connect to the app with the user you previously created.
 
 Feel free to play around with this demo, to better understand its internals.
 
