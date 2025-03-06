@@ -28,7 +28,7 @@ export const strapiAuthProvider = ({
       return;
     },
     checkError: async (error) => {
-      if (error.status === 401 || error.status === 403) {
+      if (error.status === 401) {
         localStorage.removeItem(STRAPI_USER_KEY);
         localStorage.removeItem(STRAPI_JWT_KEY);
         return Promise.reject();
