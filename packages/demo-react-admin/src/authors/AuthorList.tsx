@@ -15,15 +15,15 @@ import { Avatar } from "./Avatar";
 export const AuthorList = () => (
   <List>
     <Datagrid>
+      <WrapperField label="Avatar">
+        <Avatar source="avatar.formats.thumbnail" />
+      </WrapperField>
       <NumberField source="ref" />
       <TextField source="name" />
       <EmailField source="email" />
       <DateField source="createdAt" />
       <DateField source="updatedAt" />
       <DateField source="publishedAt" />
-      <WrapperField label="Avatar">
-        <Avatar source="avatar.formats.thumbnail" />
-      </WrapperField>
       <ReferenceManyField reference="articles" target="author.documentId">
         <SingleFieldList />
       </ReferenceManyField>

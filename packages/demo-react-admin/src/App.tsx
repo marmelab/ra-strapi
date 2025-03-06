@@ -1,16 +1,17 @@
-import { strapiDataProvider, strapiAuthProvider } from "ra-strapi";
+import { strapiAuthProvider, strapiDataProvider } from "ra-strapi";
 import {
   Admin,
   EditGuesser,
-  ListGuesser,
   LoginWithEmail,
   Resource,
-  ShowGuesser,
+  ShowGuesser
 } from "react-admin";
 import { Layout } from "./Layout";
-import { authProvider } from "./authProvider";
-import { strapiDataProvider } from "ra-strapi";
+import { ArticleEdit } from "./articles/ArticleEdit";
+import { ArticleList } from "./articles/ArticleList";
+import { ArticleShow } from "./articles/ArticleShow";
 import authors from "./authors";
+import categories from "./categories";
 
 const STRAPI_URL = "http://localhost:1337";
 
@@ -23,16 +24,17 @@ export const App = () => (
   >
     <Resource
       name="articles"
-      list={ListGuesser}
-      edit={EditGuesser}
-      show={ShowGuesser}
+      list={ArticleList}
+      edit={ArticleEdit}
+      show={ArticleShow}
       recordRepresentation={"title"}
     />
     <Resource
       name="categories"
-      list={ListGuesser}
+      list={categories.List}
       edit={EditGuesser}
       show={ShowGuesser}
+      recordRepresentation={"name"}
     />
     <Resource
       name="authors"
@@ -40,6 +42,7 @@ export const App = () => (
       create={authors.Create}
       edit={EditGuesser}
       show={authors.Show}
+      recordRepresentation={"name"}
     />
   </Admin>
 );
