@@ -2,6 +2,7 @@ import qs from "qs";
 import {
   CreateParams,
   DataProvider,
+  Options,
   UpdateParams,
   fetchUtils,
 } from "react-admin";
@@ -28,7 +29,7 @@ type StrapiGetManyReferenceQuery = {
   sort?: string[];
   filters?: any;
 };
-const useStrapiToRa = (config) => {
+const useStrapiDataProvider = (baseURL: string) => {
   const addBaseURLRecursively = (data) => {
     if (!data) return;
     if (Array.isArray(data)) {
@@ -43,7 +44,7 @@ const useStrapiToRa = (config) => {
       }, {});
       return {
         ...updatedRest,
-        url: url.includes("http") ? url : `${config.baseURL}${url}`,
+        url: url.includes("http") ? url : `${baseURL}${url}`,
       };
     }
     return Object.entries(data).reduce((acc, [key, value]) => {
@@ -52,7 +53,7 @@ const useStrapiToRa = (config) => {
       return acc;
     }, {});
   };
-  const toRaAttributes = (attributes: any, config) => {
+  const toRaAttributes = (attributes: any) => {
     Object.keys(attributes).forEach((key: string) => {
       const data = attributes[key];
       if (!data) return;
@@ -75,15 +76,16 @@ const useStrapiToRa = (config) => {
 
     return attributes;
   };
+
   return {
     toRaRecord: (data: any) => {
       const { documentId, id, blocks, ...attributes } = data;
       return {
         id: documentId,
         ref: id,
-        ...toRaAttributes(attributes, config),
+        ...toRaAttributes(attributes),
       };
-    },
+    }
   };
 };
 
@@ -198,17 +200,37 @@ const toStrapiBody = (params: UpdateParams | CreateParams) => {
   return JSON.stringify({ data });
 };
 
+/**
+ * Returns a dataProvider that can be used with react-admin.
+ *
+ * @param baseURL **Required** - The base URL of the Strapi API.
+ * @param authType *Optional* - The type of authentication to use. Values can be "jwt", you can use this with the strapiAuthProvider, or "apiToken" if you want to use a static token (https://docs.strapi.io/user-docs/settings/API-tokens). If not provided, it will use the public api.
+ *
+ * @example
+ * ```ts
+ * const authProvider = googleAuthProvider({
+ *   gsiParams: {
+ *     client_id: "my-application-client-id.apps.googleusercontent.com",
+ *     ux_mode: "popup",
+ *   },
+ *   tokenStore: myTokenStore,
+ * });
+ * ```
+ */
 export type StrapiDataProviderConf = {
   baseURL: string;
-  authToken?: string;
+  httpClient?: any;
 };
 
 export const strapiDataProvider = (
-  config: StrapiDataProviderConf
+  {
+    baseURL,
+    httpClient = fetchUtils.fetchJson
+  }
 ): Required<DataProvider> => {
-  const API_URL = `${config.baseURL}/api`;
+  const API_URL = `${baseURL}/api`;
 
-  const { toRaRecord } = useStrapiToRa(config);
+  const { toRaRecord} = useStrapiDataProvider(baseURL);
 
   return {
     getList: async (resource, { pagination, sort, filter }) => {
@@ -231,15 +253,7 @@ export const strapiDataProvider = (
         encodeValuesOnly: true,
       });
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
-      const { data, meta } = await fetchUtils
-        .fetchJson(url, {
-          headers: new Headers({
-            Authorization: `Bearer ${
-              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-            }`,
-          }),
-        })
-        .then((res) => res.json);
+      const { data, meta } = await httpClient(url).then((res) => res.json);
 
       return {
         data: data.map(toRaRecord),
@@ -274,28 +288,12 @@ export const strapiDataProvider = (
       });
       const url = `${API_URL}/${resource}?${POPULATE_ALL}&${queryStringify}`;
 
-      const { data, meta } = await fetchUtils
-        .fetchJson(url, {
-          headers: new Headers({
-            Authorization: `Bearer ${
-              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-            }`,
-          }),
-        })
-        .then((res) => res.json);
+      const { data, meta } = await httpClient(url).then((res) => res.json);
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
       const url = `${API_URL}/${resource}/${id}?${POPULATE_ALL}`;
-      const { data } = await fetchUtils
-        .fetchJson(url, {
-          headers: new Headers({
-            Authorization: `Bearer ${
-              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-            }`,
-          }),
-        })
-        .then((res) => res.json);
+      const { data } = await httpClient(url).then((res) => res.json);
       return { data: toRaRecord(data) };
     },
     getMany: async (resource, { ids }) => {
@@ -310,36 +308,17 @@ export const strapiDataProvider = (
         encodeValuesOnly: true,
       });
       const url = `${API_URL}/${resource}?${queryStringify}`;
-      const { data } = await fetchUtils
-        .fetchJson(url, {
-          headers: new Headers({
-            Authorization: `Bearer ${
-              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-            }`,
-          }),
-        })
-        .then((res) => res.json)
-        .catch((error) => {
-          console.error(error);
-          return { data: [] };
-        });
+      const { data } = await httpClient(url).then((res) => res.json);
       return { data: data.map(toRaRecord) };
     },
     update: async (resource, params) => {
       const strapiUpdateParam = toStrapiBody(params);
       const url = `${API_URL}/${resource}/${params.id}`;
 
-      const { data } = await fetchUtils
-        .fetchJson(url, {
-          method: "PUT",
-          body: strapiUpdateParam,
-          headers: new Headers({
-            Authorization: `Bearer ${
-              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-            }`,
-          }),
-        })
-        .then((res) => res.json);
+      const { data } = await httpClient(url, {
+        method: "PUT",
+        body: strapiUpdateParam,
+      }).then((res) => res.json);
 
       return { data: toRaRecord(data) };
     },
@@ -347,42 +326,25 @@ export const strapiDataProvider = (
       const strapiUpdateParam = toStrapiBody(params);
       const url = `${API_URL}/${resource}`;
 
-      const { data: createdData } = await fetchUtils
-        .fetchJson(url, {
-          method: "POST",
-          body: strapiUpdateParam,
-          headers: new Headers({
-            Authorization: `Bearer ${
-              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-            }`,
-          }),
-        })
-        .then((res) => res.json);
+      const { data: createdData } = await httpClient(url, {
+        method: "POST",
+        body: strapiUpdateParam,
+      }).then((res) => res.json);
 
       return { data: toRaRecord(createdData) };
     },
     delete: async (resource, { id }) => {
       const url = `${API_URL}/${resource}/${id}`;
-      await fetchUtils.fetchJson(url, {
+      await httpClient(url, {
         method: "DELETE",
-        headers: new Headers({
-          Authorization: `Bearer ${
-            localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-          }`,
-        }),
       });
       return { data: { id } } as any;
     },
     deleteMany: async (resource, { ids }) => {
       await Promise.all(
         ids.map((id) =>
-          fetchUtils.fetchJson(`${API_URL}/${resource}/${id}`, {
-            method: "DELETE",
-            headers: new Headers({
-              Authorization: `Bearer ${
-                localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-              }`,
-            }),
+          httpClient(`${API_URL}/${resource}/${id}`, {
+            method: "DELETE"
           })
         )
       );
@@ -391,15 +353,9 @@ export const strapiDataProvider = (
     updateMany: async (resource, params) => {
       const updatedData = await Promise.all(
         params.ids.map(async (id) => {
-          const { data } = await fetchUtils
-            .fetchJson(`${API_URL}/${resource}/${id}`, {
+          const { data } = await httpClient(`${API_URL}/${resource}/${id}`, {
               method: "PUT",
               body: JSON.stringify(params.data),
-              headers: new Headers({
-                Authorization: `Bearer ${
-                  localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
-                }`,
-              }),
             })
             .then((res) => res.json);
           return data.documentId;

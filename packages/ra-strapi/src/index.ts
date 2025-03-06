@@ -1,2 +1,2 @@
 export { strapiDataProvider } from './strapiDataProvider.js';
-export { strapiAuthProvider } from './strapiAuthProvider.js';
+export { useStrapiAuthProvider } from './useStrapiAuthProvider.js';
