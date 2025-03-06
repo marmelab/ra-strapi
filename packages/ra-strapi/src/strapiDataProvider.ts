@@ -139,6 +139,17 @@ const curateData = (data: any) => {
     documentId,
     ...curatedData
   } = data;
+  Object.entries(curatedData).forEach(([key, value]) => {
+    if (typeof value === "object" && value !== null) {
+      if (value.hasOwnProperty("mime")) {
+        delete curatedData[key];
+      }
+      curateData[key] = curateData(value);
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      curatedData[key] = value.map((item) => curateData(item));
+    }
+  });
   return curatedData;
 };
 
@@ -220,7 +231,9 @@ export const strapiDataProvider = (
       const { data, meta } = await fetchUtils
         .fetchJson(url, {
           headers: new Headers({
-            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+            Authorization: `Bearer ${
+              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+            }`,
           }),
         })
         .then((res) => res.json);
@@ -258,7 +271,9 @@ export const strapiDataProvider = (
       const { data, meta } = await fetchUtils
         .fetchJson(url, {
           headers: new Headers({
-            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+            Authorization: `Bearer ${
+              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+            }`,
           }),
         })
         .then((res) => res.json);
@@ -269,7 +284,9 @@ export const strapiDataProvider = (
       const { data } = await fetchUtils
         .fetchJson(url, {
           headers: new Headers({
-            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+            Authorization: `Bearer ${
+              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+            }`,
           }),
         })
         .then((res) => res.json);
@@ -288,7 +305,9 @@ export const strapiDataProvider = (
       const { data } = await fetchUtils
         .fetchJson(url, {
           headers: new Headers({
-            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+            Authorization: `Bearer ${
+              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+            }`,
           }),
         })
         .then((res) => res.json);
@@ -303,7 +322,9 @@ export const strapiDataProvider = (
           method: "PUT",
           body: strapiUpdateParam,
           headers: new Headers({
-            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+            Authorization: `Bearer ${
+              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+            }`,
           }),
         })
         .then((res) => res.json);
@@ -319,7 +340,9 @@ export const strapiDataProvider = (
           method: "POST",
           body: strapiUpdateParam,
           headers: new Headers({
-            Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+            Authorization: `Bearer ${
+              localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+            }`,
           }),
         })
         .then((res) => res.json);
@@ -331,7 +354,9 @@ export const strapiDataProvider = (
       await fetchUtils.fetchJson(url, {
         method: "DELETE",
         headers: new Headers({
-          Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+          Authorization: `Bearer ${
+            localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+          }`,
         }),
       });
       return { data: { id } } as any;
@@ -342,7 +367,9 @@ export const strapiDataProvider = (
           fetchUtils.fetchJson(`${API_URL}/${resource}/${id}`, {
             method: "DELETE",
             headers: new Headers({
-              Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken}`,
+              Authorization: `Bearer ${
+                localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+              }`,
             }),
           })
         )
@@ -357,7 +384,9 @@ export const strapiDataProvider = (
               method: "PUT",
               body: JSON.stringify(params.data),
               headers: new Headers({
-                Authorization: `Bearer ${localStorage.getItem(STRAPI_JWT_KEY) || config.authToken }`,
+                Authorization: `Bearer ${
+                  localStorage.getItem(STRAPI_JWT_KEY) || config.authToken
+                }`,
               }),
             })
             .then((res) => res.json);
