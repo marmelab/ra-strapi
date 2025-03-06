@@ -1,4 +1,16 @@
-import { Datagrid, DateField, EmailField, List, NumberField, ReferenceManyField, SingleFieldList, TextField } from 'react-admin';
+import {
+  Datagrid,
+  DateField,
+  EmailField,
+  ImageField,
+  List,
+  NumberField,
+  ReferenceManyField,
+  SingleFieldList,
+  TextField,
+  WrapperField,
+} from "react-admin";
+import { Avatar } from "./Avatar";
 
 export const AuthorList = () => (
   <List>
@@ -9,7 +21,9 @@ export const AuthorList = () => (
       <DateField source="createdAt" />
       <DateField source="updatedAt" />
       <DateField source="publishedAt" />
-      <TextField source="avatar.id" />
+      <WrapperField label="Avatar">
+        <Avatar source="avatar.formats.thumbnail" />
+      </WrapperField>
       <ReferenceManyField reference="articles" target="author.documentId">
         <SingleFieldList />
       </ReferenceManyField>

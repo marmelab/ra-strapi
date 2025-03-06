@@ -31,7 +31,7 @@ export const App = () => (
       list={authors.List}
       create={authors.Create}
       edit={EditGuesser}
-      show={ShowGuesser}
+      show={authors.Show}
     />
   </Admin>
 );
