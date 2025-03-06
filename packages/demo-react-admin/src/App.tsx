@@ -1,15 +1,11 @@
 import { strapiAuthProvider, strapiDataProvider } from "ra-strapi";
 import {
   Admin,
-  EditGuesser,
   LoginWithEmail,
-  Resource,
-  ShowGuesser
+  Resource
 } from "react-admin";
 import { Layout } from "./Layout";
-import { ArticleEdit } from "./articles/ArticleEdit";
-import { ArticleList } from "./articles/ArticleList";
-import { ArticleShow } from "./articles/ArticleShow";
+import articles from "./articles";
 import authors from "./authors";
 import categories from "./categories";
 
@@ -24,23 +20,25 @@ export const App = () => (
   >
     <Resource
       name="articles"
-      list={ArticleList}
-      edit={ArticleEdit}
-      show={ArticleShow}
+      list={articles.List}
+      edit={articles.Edit}
+      show={articles.Show}
+      create={articles.Create}
       recordRepresentation={"title"}
     />
     <Resource
       name="categories"
       list={categories.List}
-      edit={EditGuesser}
-      show={ShowGuesser}
+      edit={categories.Edit}
+      show={categories.Show}
+      create={categories.Create}
       recordRepresentation={"name"}
     />
     <Resource
       name="authors"
       list={authors.List}
       create={authors.Create}
-      edit={EditGuesser}
+      edit={authors.Edit}
       show={authors.Show}
       recordRepresentation={"name"}
     />

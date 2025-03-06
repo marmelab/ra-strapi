@@ -24,7 +24,7 @@ export const AuthorList = () => (
       <DateField source="createdAt" />
       <DateField source="updatedAt" />
       <DateField source="publishedAt" />
-      <ReferenceManyField reference="articles" target="author.documentId">
+      <ReferenceManyField reference="articles" target="author">
         <SingleFieldList />
       </ReferenceManyField>
     </Datagrid>

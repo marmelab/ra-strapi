@@ -1,17 +1,7 @@
-import {
-    Edit,
-    ReferenceInput,
-    SimpleForm,
-    TextInput
-} from "react-admin";
+import { Edit } from "react-admin";
+import { ArticleForm } from "./ArticleForm";
 export const ArticleEdit = () => (
   <Edit>
-    <SimpleForm>
-      <TextInput source="title" /> 
-      <TextInput source="description" />
-      <TextInput source="slug" /> 
-      <ReferenceInput source="author" reference="authors"/>
-      <ReferenceInput source="category" reference="categories"/>
-    </SimpleForm>
+    <ArticleForm />
   </Edit>
 );

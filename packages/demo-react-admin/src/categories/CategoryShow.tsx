@@ -1,18 +1,15 @@
 import {
     ChipField,
-  Datagrid,
-  DateField,
-  List,
-  NumberField,
-  ReferenceManyField,
-  SingleFieldList,
-  TextField,
+    ReferenceManyField,
+    Show,
+    SimpleShowLayout,
+    SingleFieldList,
+    TextField
 } from "react-admin";
-
-export const CategoryList = () => (
-  <List>
-    <Datagrid>
-      <TextField source="name" />
+export const CategoryShow = () => (
+  <Show>
+    <SimpleShowLayout>
+      <TextField source="name" /> 
       <TextField source="slug" />
       <TextField source="description" />
       <ReferenceManyField target="category" reference="articles">
@@ -20,6 +17,6 @@ export const CategoryList = () => (
           <ChipField source="title"/>
         </SingleFieldList>
       </ReferenceManyField>
-    </Datagrid>
-  </List>
+    </SimpleShowLayout>
+  </Show>
 );

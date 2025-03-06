@@ -1,13 +1,7 @@
-import {
-    Create,
-    SimpleForm,
-    TextInput
-} from "react-admin";
+import { Create } from "react-admin";
+import { AuthorForm } from "./AuthorForm";
 export const AuthorCreate = () => (
   <Create>
-    <SimpleForm>
-      <TextInput source="name" />
-      <TextInput source="email" />
-    </SimpleForm>
+    <AuthorForm />
   </Create>
 );

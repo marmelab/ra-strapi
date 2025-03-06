@@ -8,7 +8,7 @@ import {
 export const ArticleShow = () => (
   <Show>
     <SimpleShowLayout>
-      <ImageField source="cover.formats.thumbnail.url" label="Cover" />
+      <ImageField source="cover.formats.large.url" label="Cover"/>
       <TextField source="title" />
       <TextField source="description" />
       <ReferenceField reference="authors" source="author" link="show" />
