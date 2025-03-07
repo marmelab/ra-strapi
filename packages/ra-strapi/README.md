@@ -46,7 +46,11 @@ Pass those dataProvider and authProvider to you `Admin` component.
 As you will need to authenticate with email/password, pass the react-admin `LoginWithEmail` to the `loginPage` prop, or a custom login page.
 
 ```tsx
-import { strapiDataProvider, strapiAuthProvider, strapiHttpClient } from "ra-strapi";
+import {
+  strapiDataProvider,
+  strapiAuthProvider,
+  strapiHttpClient,
+} from "ra-strapi";
 import { Admin, ListGuesser, LoginWithEmail, Resource } from "react-admin";
 import { Layout } from "./Layout";
 
@@ -55,7 +59,12 @@ const authProvider = strapiAuthProvider({ baseURL: STRAPI_URL });
 const httpClient = strapiHttpClient();
 const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL, httpClient });
 export const App = () => (
-  <Admin layout={Layout} dataProvider={dataProvider} authProvider={authProvider} loginPage={LoginWithEmail}>
+  <Admin
+    layout={Layout}
+    dataProvider={dataProvider}
+    authProvider={authProvider}
+    loginPage={LoginWithEmail}
+  >
     <Resource name="articles" list={ListGuesser} />
   </Admin>
 );
@@ -73,7 +82,7 @@ import { Admin, ListGuesser, LoginWithEmail, Resource } from "react-admin";
 import { Layout } from "./Layout";
 
 const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
-const httpClient = strapiHttpClient('apiKey');
+const httpClient = strapiHttpClient({ authType: "apiKey" });
 const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL, httpClient });
 export const App = () => (
   <Admin layout={Layout} dataProvider={dataProvider} loginPage={LoginWithEmail}>
@@ -82,8 +91,7 @@ export const App = () => (
 );
 ```
 
-**note:** you may need to create an api key in the Strapi admin panel ( [see Strapi doc](https://docs.strapi.io/user-docs/settings/API-tokens) ). 
-
+**note:** you may need to create an api key in the Strapi admin panel ( [see Strapi doc](https://docs.strapi.io/user-docs/settings/API-tokens) ).
 
 ## License
 
