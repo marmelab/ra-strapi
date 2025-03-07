@@ -1,6 +1,6 @@
 # ra-appwrite
 
-This package provides a Data Provider and an Auth Provider to integrate [Appwrite](https://appwrite.io/) with [react-admin](https://marmelab.com/react-admin).
+This package provides a Data Provider and an Auth Provider to integrate [Strapi](https:/strapi.io/) with [react-admin](https://marmelab.com/react-admin).
 
 This package supports:
 
@@ -10,69 +10,80 @@ This package supports:
 ## Installation
 
 ```sh
-yarn add ra-appwrite
+yarn add ra-strapi
 # or
-npm install ra-appwrite
+npm install ra-strapi
 ```
 
 ## Usage
 
-In the [Appwrite console](https://cloud.appwrite.io/console/organization-67af6d36000169d2c8a9), in the Auth menu, create a new user by entering an email and a password.
+### Using the public API
 
-Still in the AppWrite console, create a new project and a new database in this project. Then, create collections in the database (e.g. 'contacts', 'companies', etc). For each collection, in the "Settings" tab, add a Permission for the user that you've created.
+Create a new dataprovider giving the baseURL of your Strapi instance, pass the dataprovider to the `Admin` component.
 
-You will need the project ID, database ID, and collection IDs to initialize your admin. And since the default react-admin login page uses a username and password, you will need to override it with a login page using email and password.
+```tsx
+import { strapiDataProvider } from "ra-strapi";
+import { Admin, ListGuesser, Resource } from "react-admin";
+import { Layout } from "./Layout";
 
-```jsx
-import React from "react";
-import { Client } from 'appwrite';
-import {
-  appWriteDataProvider,
-  appWriteAuthProvider,
-  LoginForm
-} from 'ra-appwrite';
-import {
-  Admin,
-  EditGuesser,
-  ListGuesser,
-  Resource,
-  ShowGuesser,
-} from "react-admin";
+const dataProvider = strapiDataProvider({ baseURL: "http://localhost:1337" });
 
-const client = new Client();
-client
-    .setEndpoint(APPWRITE_ENDPOINT) // often https://cloud.appwrite.io/v1
-    .setProject(APPWRITE_PROJECTID);
-const dataProvider = appWriteDataProvider({
-    client,
-    databaseId: APPWRITE_DATABASEID,
-    collectionIds: {
-        contacts: APPWRITE_COLLECTIONID_CONTACTS,
-        companies: APPWRITE_COLLECTIONID_COMPANIES,
-    },
-});
-const authProvider = appWriteAuthProvider(client);
-// custom login page with email and password instead of username and password
-const LoginPage = () => (
-    <Login>
-         <LoginForm />
-    </Login>
-);
-
-const App = () => (
-    <Admin
-        dataProvider={dataProvider}
-        authProvider={authProvider}
-        loginPage={LoginPage}
-    >
-        {/* the resource names must match the collection IDs */}
-        <Resource name="contacts" list={ListGuesser} edit={EditGuesser} />
-        <Resource name="companies" list={ListGuesser} edit={EditGuesser} />
+export const App = () => (
+  <Admin layout={Layout} dataProvider={dataProvider}>
+    <Resource name="articles" list={ListGuesser} />
   </Admin>
 );
-
-export default App;
 ```
+
+**note:** you may need to tune the permissions of the public role ( [see Strapi doc](https://docs.strapi.io/user-docs/users-roles-permissions/configuring-end-users-roles) ).
+
+### Using the authenticated API
+
+Create an authProvider giving the baseURL of your Strapi instance, it will handle for you the jwt token.
+Create an httpClient with `strapiHttpClient`, it will handle the authorization headers for you.
+Create a dataProvider giving the baseURL of your Stapi instance, and the httpClient you created.
+Pass those dataProvider and authProvider to you `Admin` component.
+As you will need to authenticate with email/password, pass the react-admin `LoginWithEmail` to the `loginPage` prop, or a custom login page.
+
+```tsx
+import { strapiDataProvider, strapiAuthProvider, strapiHttpClient } from "ra-strapi";
+import { Admin, ListGuesser, LoginWithEmail, Resource } from "react-admin";
+import { Layout } from "./Layout";
+
+const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
+const authProvider = strapiAuthProvider({ baseURL: STRAPI_URL });
+const httpClient = strapiHttpClient();
+const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL, httpClient });
+export const App = () => (
+  <Admin layout={Layout} dataProvider={dataProvider} authProvider={authProvider} loginPage={LoginWithEmail}>
+    <Resource name="articles" list={ListGuesser} />
+  </Admin>
+);
+```
+
+### Using an API key
+
+Create an httpClient with `strapiHttpClient`, specifying the authType to `apiKey`.
+Make sure to have a environment variable `STRAPI_API_KEY` containing the API key.
+Create a dataProvider giving the baseURL of your Stapi instance, and the httpClient you created.
+
+```tsx
+import { strapiDataProvider, strapiHttpClient } from "ra-strapi";
+import { Admin, ListGuesser, LoginWithEmail, Resource } from "react-admin";
+import { Layout } from "./Layout";
+
+const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
+const httpClient = strapiHttpClient('apiKey');
+const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL, httpClient });
+export const App = () => (
+  <Admin layout={Layout} dataProvider={dataProvider} loginPage={LoginWithEmail}>
+    <Resource name="articles" list={ListGuesser} />
+  </Admin>
+);
+```
+
+**note:** you may need to create an api key in the Strapi admin panel ( [see Strapi doc](https://docs.strapi.io/user-docs/settings/API-tokens) ). 
+
 
 ## License
 

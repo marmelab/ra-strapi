@@ -29,7 +29,7 @@ type StrapiGetManyReferenceQuery = {
   sort?: string[];
   filters?: any;
 };
-const useStrapiDataProvider = (baseURL: string) => {
+const strapiToRaRecord = (baseURL: string) => {
   const addBaseURLRecursively = (data) => {
     if (!data) return;
     if (Array.isArray(data)) {
@@ -200,28 +200,26 @@ const toStrapiBody = (params: UpdateParams | CreateParams) => {
   return JSON.stringify({ data });
 };
 
-/**
- * Returns a dataProvider that can be used with react-admin.
- *
- * @param baseURL **Required** - The base URL of the Strapi API.
- * @param authType *Optional* - The type of authentication to use. Values can be "jwt", you can use this with the strapiAuthProvider, or "apiToken" if you want to use a static token (https://docs.strapi.io/user-docs/settings/API-tokens). If not provided, it will use the public api.
- *
- * @example
- * ```ts
- * const authProvider = googleAuthProvider({
- *   gsiParams: {
- *     client_id: "my-application-client-id.apps.googleusercontent.com",
- *     ux_mode: "popup",
- *   },
- *   tokenStore: myTokenStore,
- * });
- * ```
- */
 export type StrapiDataProviderConf = {
   baseURL: string;
   httpClient?: any;
 };
 
+/**
+ * Returns a dataProvider that can be used with react-admin.
+ *
+ * @param baseURL **Required** - The base URL of the Strapi API.
+ * @param httpClient *Optional* - The httpClient to use. Default to fetchUtils.fetchJson
+ *
+ * @example
+ * ```ts
+ * const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL }); // It will use the default httpClient
+ * ```
+ * or 
+ * ```ts
+ * const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL, httpClient }); // If you want to use a custom httpClient
+ * ```
+ */
 export const strapiDataProvider = (
   {
     baseURL,
@@ -230,10 +228,11 @@ export const strapiDataProvider = (
 ): Required<DataProvider> => {
   const API_URL = `${baseURL}/api`;
 
-  const { toRaRecord} = useStrapiDataProvider(baseURL);
+  const { toRaRecord} = strapiToRaRecord(baseURL);
 
   return {
     getList: async (resource, { pagination, sort, filter }) => {
+      console.log("getList", resource);
       const { page = 1, perPage = 10 } = pagination ?? {};
       const query: StrapiGetListQuery = {};
 
@@ -264,6 +263,7 @@ export const strapiDataProvider = (
       resource,
       { target, id, pagination, sort, filter }
     ) => {
+      console.log("getManyReference", resource);
       const query: StrapiGetManyReferenceQuery = {};
       if (sort) {
         query.sort = [`${sort.field}:${sort.order}`];
@@ -292,11 +292,13 @@ export const strapiDataProvider = (
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
+      console.log("getOne", resource);
       const url = `${API_URL}/${resource}/${id}?${POPULATE_ALL}`;
       const { data } = await httpClient(url).then((res) => res.json);
       return { data: toRaRecord(data) };
     },
     getMany: async (resource, { ids }) => {
+      console.log("getMany", resource);
       const query = {
         filters: {
           documentId: {
