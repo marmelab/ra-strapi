@@ -8,8 +8,8 @@ export type StrapiHttpClientParams = {
 /**
  * Returns an httpClient that adds the Authorization header to the requests.
  *
- * @param authType - The type of authentication to use. It can be "jwt" or "apiKey". Default is "jwt".
- * @param storage - The storage to use to store the token. Default is localStorage.
+ * @param authType *Optional* - The type of authentication to use. It can be "jwt" or "apiKey". Default is "jwt".
+ * @param storage *Optional* - The storage to use to store the token. Default is localStorage.
  *
  * @example
  * ```ts
@@ -20,10 +20,10 @@ export type StrapiHttpClientParams = {
  * const httpClient = strapiHttpClient({ authType : "apiKey" }); // If you want to use API Key authentication, it will use the STRAPI_API_KEY environment variable
  * ```
  */
-export const strapiHttpClient = (params: StrapiHttpClientParams): any => {
+export const strapiHttpClient = (params?: StrapiHttpClientParams): any => {
   const authType = params?.authType || "jwt";
   const storage = params?.storage || localStorage;
-  
+
   const getAuthorizationToken = () => {
     if (!authType) return {};
     if (authType === "apiKey" && !process.env.STRAPI_API_KEY) {

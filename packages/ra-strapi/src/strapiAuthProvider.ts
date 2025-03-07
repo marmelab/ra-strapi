@@ -5,12 +5,13 @@ export const STRAPI_JWT_KEY = "strapi_jwt";
 
 export type StrapiAuthProviderParams = {
   baseURL: string;
-  storage: Storage;
+  storage?: Storage;
 };
 /**
  * Returns an authProvider that can be used with react-admin and Strapi.
  *
  * @param baseURL **Required** - The base URL of the Strapi API.
+ * @param storage *Optional* - The storage to use to store the token. Default is localStorage.
  *
  * @example
  * ```ts
