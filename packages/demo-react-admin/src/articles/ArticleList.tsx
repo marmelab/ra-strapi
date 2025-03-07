@@ -1,15 +1,20 @@
 import {
-    Datagrid,
-    ImageField,
-    List,
-    ReferenceField,
-    TextField
+  Datagrid,
+  ImageField,
+  List,
+  ReferenceField,
+  TextField,
+  TextInput
 } from "react-admin";
 
+const articleFilters = [
+  <TextInput source="title_contains" label="Title"/>
+]
+
 export const ArticleList = () => (
-  <List>
+  <List filters={articleFilters}>
     <Datagrid>
-      <ImageField source="cover.formats.thumbnail.url" label="Cover"/>
+      <ImageField source="cover.formats.thumbnail.url" label="Cover" />
       <TextField source="title" />
       <TextField source="description" />
       <ReferenceField reference="authors" source="author" link="show" />

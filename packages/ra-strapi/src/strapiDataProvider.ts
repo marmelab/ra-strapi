@@ -2,18 +2,12 @@ import qs from "qs";
 import {
   CreateParams,
   DataProvider,
-  Options,
   UpdateParams,
   fetchUtils,
 } from "react-admin";
-import { STRAPI_JWT_KEY } from "./strapiAuthProvider";
+import { filtersBuilder } from "./filtersBuilder";
+
 const POPULATE_ALL = "populate=*";
-const OPERATORS = {
-  _gte: "$gte",
-  _lte: "$lte",
-  _neq: "$ne",
-  _q: "$contains",
-};
 
 type StrapiPagination = {
   page: number;
@@ -85,42 +79,8 @@ const strapiToRaRecord = (baseURL: string) => {
         ref: id,
         ...toRaAttributes(attributes),
       };
-    }
+    },
   };
-};
-
-const toStrapiFilter = (raFilter: any) => {
-  if (!raFilter) return null;
-  let filters: any = {};
-
-  Object.keys(raFilter).forEach((key) => {
-    if (typeof raFilter[key] === "object") {
-      return (filters[key] = toStrapiFilter(raFilter[key]));
-    }
-
-    const operator = OPERATORS[key.slice(-4) as keyof typeof OPERATORS];
-    if (key.slice(-2) === "_q") {
-      const field = key.slice(0, -2);
-      filters[field] = {
-        $containsi: raFilter[key],
-      };
-    } else if (key === "id") {
-      filters.componentId = {
-        $in: raFilter.id,
-      };
-    } else if (operator) {
-      const field = key.slice(0, -4);
-      filters[field] = {
-        [operator]: raFilter[key],
-      };
-    } else {
-      filters[key] = {
-        $eq: raFilter[key],
-      };
-    }
-  });
-
-  return filters;
 };
 
 const isMultimedia = (value: any) => {
@@ -215,24 +175,21 @@ export type StrapiDataProviderConf = {
  * ```ts
  * const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL }); // It will use the default httpClient
  * ```
- * or 
+ * or
  * ```ts
  * const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL, httpClient }); // If you want to use a custom httpClient
  * ```
  */
-export const strapiDataProvider = (
-  {
-    baseURL,
-    httpClient = fetchUtils.fetchJson
-  }
-): Required<DataProvider> => {
+export const strapiDataProvider = ({
+  baseURL,
+  httpClient = fetchUtils.fetchJson,
+}): Required<DataProvider> => {
   const API_URL = `${baseURL}/api`;
 
-  const { toRaRecord} = strapiToRaRecord(baseURL);
+  const { toRaRecord } = strapiToRaRecord(baseURL);
 
   return {
     getList: async (resource, { pagination, sort, filter }) => {
-      console.log("getList", resource);
       const { page = 1, perPage = 10 } = pagination ?? {};
       const query: StrapiGetListQuery = {};
 
@@ -246,7 +203,7 @@ export const strapiDataProvider = (
         };
       }
       if (filter) {
-        query.filters = toStrapiFilter(filter);
+        query.filters = filtersBuilder(filter);
       }
       const queryStringify = qs.stringify(query, {
         encodeValuesOnly: true,
@@ -263,7 +220,6 @@ export const strapiDataProvider = (
       resource,
       { target, id, pagination, sort, filter }
     ) => {
-      console.log("getManyReference", resource);
       const query: StrapiGetManyReferenceQuery = {};
       if (sort) {
         query.sort = [`${sort.field}:${sort.order}`];
@@ -275,7 +231,7 @@ export const strapiDataProvider = (
         };
       }
       if (filter) {
-        query.filters = toStrapiFilter({
+        query.filters = filtersBuilder({
           ...filter,
           [target.split(".").join("][")]: {
             documentId: id,
@@ -292,13 +248,11 @@ export const strapiDataProvider = (
       return { data: data.map(toRaRecord), total: meta.pagination.total };
     },
     getOne: async (resource, { id }) => {
-      console.log("getOne", resource);
       const url = `${API_URL}/${resource}/${id}?${POPULATE_ALL}`;
       const { data } = await httpClient(url).then((res) => res.json);
       return { data: toRaRecord(data) };
     },
     getMany: async (resource, { ids }) => {
-      console.log("getMany", resource);
       const query = {
         filters: {
           documentId: {
@@ -346,7 +300,7 @@ export const strapiDataProvider = (
       await Promise.all(
         ids.map((id) =>
           httpClient(`${API_URL}/${resource}/${id}`, {
-            method: "DELETE"
+            method: "DELETE",
           })
         )
       );
@@ -356,10 +310,9 @@ export const strapiDataProvider = (
       const updatedData = await Promise.all(
         params.ids.map(async (id) => {
           const { data } = await httpClient(`${API_URL}/${resource}/${id}`, {
-              method: "PUT",
-              body: JSON.stringify(params.data),
-            })
-            .then((res) => res.json);
+            method: "PUT",
+            body: JSON.stringify(params.data),
+          }).then((res) => res.json);
           return data.documentId;
         })
       );

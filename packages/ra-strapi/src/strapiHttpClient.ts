@@ -20,10 +20,10 @@ export type StrapiHttpClientParams = {
  * const httpClient = strapiHttpClient({ authType : "apiKey" }); // If you want to use API Key authentication, it will use the STRAPI_API_KEY environment variable
  * ```
  */
-export const strapiHttpClient = ({
-  authType = "jwt",
-  storage = localStorage,
-}: StrapiHttpClientParams): any => {
+export const strapiHttpClient = (params: StrapiHttpClientParams): any => {
+  const authType = params?.authType || "jwt";
+  const storage = params?.storage || localStorage;
+  
   const getAuthorizationToken = () => {
     if (!authType) return {};
     if (authType === "apiKey" && !process.env.STRAPI_API_KEY) {
