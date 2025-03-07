@@ -90,8 +90,63 @@ export const App = () => (
   </Admin>
 );
 ```
-
 **note:** you may need to create an api key in the Strapi admin panel ( [see Strapi doc](https://docs.strapi.io/user-docs/settings/API-tokens) ).
+
+
+### Filtering
+
+To learn how filter works with react-admin refer to the documentation [here](https://marmelab.com/react-admin/FilteringTutorial.html).
+The availables filters operators are :
+| Operator   | Description                  |
+| ---------- | ---------------------------- |
+| eq         | equal                        |
+| eqi        | equal (case insensitive)     |
+| ne         | not equal                    |
+| nei        | not equal (case insensitive) |
+| gt         | greater than                 |
+| gte        | greater than or equal        |
+| lt         | less than                    |
+| lte        | less than or equal           |
+| contains   | contains                     |
+| ncontains  | not contains                 |
+| containsi  | contains (case insensitive)  |
+| ncontainsi | not contains (case insensitive) |
+| between    | between two values           |
+| in         | in an array                  |
+| nin        | not in an array              |
+| isnull     | is null                      |
+| isnotnull  | is not null                  |
+| startswith | starts with                  |
+| startswithi| starts with (case insensitive) |
+| endswith   | ends with                    |
+| endswithi  | ends with (case insensitive) |
+
+```tsx
+import {
+  Datagrid,
+  ImageField,
+  List,
+  ReferenceField,
+  TextField,
+  TextInput
+} from "react-admin";
+
+const articleFilters = [
+  <TextInput source="title_contains" label="Title"/> // will filter articles with title containing the value
+]
+
+export const ArticleList = () => (
+  <List filters={articleFilters}>
+    <Datagrid>
+      <ImageField source="cover.formats.thumbnail.url" label="Cover" />
+      <TextField source="title" />
+      <TextField source="description" />
+      <ReferenceField reference="authors" source="author" link="show" />
+      <ReferenceField reference="categories" source="category" link="show" />
+    </Datagrid>
+  </List>
+);
+```
 
 ## License
 
