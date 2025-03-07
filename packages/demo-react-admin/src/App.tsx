@@ -1,6 +1,7 @@
 import {
+  strapiAuthProvider,
   strapiDataProvider,
-  useStrapiAuthProvider,
+  strapiHttpClient,
 } from "ra-strapi";
 import { Admin, LoginWithEmail, Resource } from "react-admin";
 import { Layout } from "./Layout";
@@ -9,15 +10,20 @@ import authors from "./authors";
 import categories from "./categories";
 
 const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
-const { strapiAuthProvider, httpClient } = useStrapiAuthProvider({
+const authProvider = strapiAuthProvider({
   baseURL: STRAPI_URL,
-  authType: "jwt",
 });
+const httpClient = strapiHttpClient();
+const dataProvider = strapiDataProvider({
+  baseURL: STRAPI_URL,
+  httpClient,
+});
+
 export const App = () => (
   <Admin
     layout={Layout}
-    authProvider={strapiAuthProvider}
-    dataProvider={strapiDataProvider({ baseURL: STRAPI_URL, httpClient })}
+    authProvider={authProvider}
+    dataProvider={dataProvider}
     loginPage={LoginWithEmail}
   >
     <Resource
