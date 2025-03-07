@@ -58,6 +58,7 @@ Here is a list of some ideas to improve this data and auth provider.
 - Use [@strapi/client](https://docs.strapi.io/dev-docs/api/client) instead of using `fetch`
 - Get the permissions list from the api to implement the `getPermissions` of the authProvider (don't know how to...)
 - Find a way to update images.
+- Use prefetch and embeddings : https://docs.strapi.io/dev-docs/api/rest/guides/understanding-populate#populate-several-levels-deep-for-specific-relations 
 
 ## License
 
