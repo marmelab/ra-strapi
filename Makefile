@@ -12,6 +12,9 @@ install: ## Install the dependencies
 	${MAKE} seed
 	cd packages/ra-strapi && yarn build
 
+build: ## Build the package
+	cd packages/ra-strapi && yarn build
+
 start-demo: ## Start the demo
 	cd ./packages/demo-react-admin && yarn dev
 
