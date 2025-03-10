@@ -1,16 +1,19 @@
-# ra-strapi
+# Strapi Data Provider For React-Admin
 
+This package provides a Data Provider and an Auth Provider to integrate [Strapi](https:/strapi.io/) with [react-admin](https://marmelab.com/react-admin).
 
-## Content
+## Repository Structure
 
-This repository contains:
+This GitHub repository contains:
 
--   The actual `ra-strapi` package
+-   The actual `ra-strapi` package ([documentation](./packages/ra-strapi/README.md))
 -   A simple demo app you can run locally to try out `ra-strapi`
 
 It is mainly inspired by https://github.com/garridorafa/ra-strapi-v4-rest
 
 ## Simple Demo
+
+This demo helps developers of the ra-strapi package to test their changes in a real-world scenario.
 
 ### Prerequesites
 
@@ -36,7 +39,7 @@ Install the dependencies and start the Demo App with the following command:
 make install start
 ```
 
-### Setup strapi
+### Setup Strapi
 
 Strapi should be up and running on http://localhost:1337 and should ask you to create an admin user, go for it.
 
