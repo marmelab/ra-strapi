@@ -71,15 +71,13 @@ const strapiToRaRecord = (baseURL: string) => {
     return attributes;
   };
 
-  return {
-    toRaRecord: (data: any) => {
-      const { documentId, id, blocks, ...attributes } = data;
-      return {
-        id: documentId,
-        ref: id,
-        ...toRaAttributes(attributes),
-      };
-    },
+  return (data: any) => {
+    const { documentId, id, blocks, ...attributes } = data;
+    return {
+      id: documentId,
+      ref: id,
+      ...toRaAttributes(attributes),
+    };
   };
 };
 
@@ -186,7 +184,7 @@ export const strapiDataProvider = ({
 }): Required<DataProvider> => {
   const API_URL = `${baseURL}/api`;
 
-  const { toRaRecord } = strapiToRaRecord(baseURL);
+  const toRaRecord = strapiToRaRecord(baseURL);
 
   return {
     getList: async (resource, { pagination, sort, filter }) => {
