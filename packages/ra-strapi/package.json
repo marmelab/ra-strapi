@@ -1,6 +1,6 @@
 {
   "name": "ra-strapi",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": "git@github.com:marmelab/ra-strapi.git",
   "author": "Guillaume BILLEY",
   "license": "MIT",
@@ -17,7 +17,8 @@
   "types": "esm/index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "qs": "^6.14.0"
   },
   "peerDependencies": {
     "react-admin": "^5.0.0"
