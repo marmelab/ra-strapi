@@ -1,4 +1,4 @@
-# ra-appwrite
+# ra-strapi
 
 This package provides a Data Provider and an Auth Provider to integrate [Strapi](https:/strapi.io/) with [react-admin](https://marmelab.com/react-admin).
 
