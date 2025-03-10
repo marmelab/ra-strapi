@@ -55,7 +55,7 @@ const strapiToRaRecord = (baseURL: string) => {
         attributes[key] = addBaseURLRecursively(data);
         return;
       }
-      // it's an strapi object
+      // it's a strapi object
       if (data.hasOwnProperty("documentId")) {
         attributes[key] = data.documentId;
         return;
