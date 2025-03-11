@@ -72,8 +72,7 @@ export const App = () => (
 
 ### Using an API key
 
-Create an httpClient with `strapiHttpClient`, specifying the authType to `apiKey`.
-Make sure to have a environment variable `STRAPI_API_KEY` containing the API key.
+Create an httpClient with `strapiHttpClient`, specifying the authType to `apiKey` and the key.
 Create a dataProvider giving the baseURL of your Stapi instance, and the httpClient you created.
 
 ```tsx
@@ -82,7 +81,8 @@ import { Admin, ListGuesser, LoginWithEmail, Resource } from "react-admin";
 import { Layout } from "./Layout";
 
 const STRAPI_URL = import.meta.env.VITE_STRAPI_URL;
-const httpClient = strapiHttpClient({ authType: "apiKey" });
+const STRAPI_API_KEY = import.meta.env.VITE_STRAPI_API_KEY;
+const httpClient = strapiHttpClient({ authType: "apiKey", apiKey:  STRAPI_API_KEY});
 const dataProvider = strapiDataProvider({ baseURL: STRAPI_URL, httpClient });
 export const App = () => (
   <Admin layout={Layout} dataProvider={dataProvider} loginPage={LoginWithEmail}>

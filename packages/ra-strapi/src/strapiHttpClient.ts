@@ -3,6 +3,7 @@ import { STRAPI_JWT_KEY } from "./strapiAuthProvider";
 
 export type StrapiHttpClientParams = {
   authType?: "jwt" | "apiKey";
+  apiKey?: string;
   storage?: Storage;
 };
 /**
@@ -22,11 +23,12 @@ export type StrapiHttpClientParams = {
  */
 export const strapiHttpClient = (params?: StrapiHttpClientParams): any => {
   const authType = params?.authType || "jwt";
+  const apiKey = params?.apiKey;
   const storage = params?.storage || localStorage;
 
   const getAuthorizationToken = () => {
     if (!authType) return {};
-    if (authType === "apiKey" && !process.env.STRAPI_API_KEY) {
+    if (authType === "apiKey" && !apiKey) {
       throw new Error(
         "To use the apiKey authentication, you need to set the STRAPI_API_KEY environment variable"
       );
@@ -35,7 +37,7 @@ export const strapiHttpClient = (params?: StrapiHttpClientParams): any => {
     const token =
       authType === "jwt"
         ? storage.getItem(STRAPI_JWT_KEY)
-        : process.env.STRAPI_API_KEY;
+        : apiKey;
     return {
       authenticated: !!token,
       token: `Bearer ${token}`,
