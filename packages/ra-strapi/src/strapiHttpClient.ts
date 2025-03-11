@@ -18,7 +18,7 @@ export type StrapiHttpClientParams = {
  * ```
  * or
  * ```ts
- * const httpClient = strapiHttpClient({ authType : "apiKey" }); // If you want to use API Key authentication, it will use the STRAPI_API_KEY environment variable
+ * const httpClient = strapiHttpClient({ authType : "apiKey", apiKey: "MyAPIKey" });
  * ```
  */
 export const strapiHttpClient = (params?: StrapiHttpClientParams): any => {
