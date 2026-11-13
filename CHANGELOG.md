@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## v2.0.0
 
 - Publish modern ESM and CommonJS package exports ([#7](https://github.com/marmelab/ra-strapi/pull/7))
+- Fix loading `ra-strapi` in Node.js, where both `import` and `require` used to fail ([#7](https://github.com/marmelab/ra-strapi/pull/7))
 
 ### Breaking Changes
 
@@ -11,3 +12,18 @@
 - the old build folders: `ra-strapi/lib/*` and `ra-strapi/esm/*`
 - the sources: `ra-strapi/src/*`, even though they are still published
 - the manifest: `ra-strapi/package.json`
+
+## v1.0.3
+
+- Fix api key passed via parameter instead of using a environment variable
+
+## v1.0.2
+
+- Fix missing qs dependency
+- [Doc] Fix bad link to npmjs documentation
+
+
+
+## v1.0.1
+
+Initial release
