@@ -1,20 +1,35 @@
 {
   "name": "ra-strapi",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "repository": "git@github.com:marmelab/ra-strapi.git",
   "author": "Guillaume BILLEY",
   "license": "MIT",
   "description": "Data provider for React Admin using Strapi",
   "files": [
     "*.md",
-    "lib",
-    "esm",
+    "dist",
     "src"
   ],
   "type": "module",
-  "main": "lib/index",
-  "module": "esm/index.js",
-  "types": "esm/index.d.ts",
+  "zshy": {
+    "exports": "./src/index.ts",
+    "noEdit": true
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
   "sideEffects": false,
   "dependencies": {
     "lodash": "^4.17.21",
@@ -24,13 +39,11 @@
     "react-admin": "^5.0.0"
   },
   "devDependencies": {
-    "react-admin": "^5.0.0"
+    "react-admin": "^5.0.0",
+    "zshy": "^0.8.0"
   },
   "scripts": {
-    "build": "yarn run build-cjs && yarn run build-esm",
-    "build-cjs": "rimraf ./lib && tsc",
-    "build-esm": "rimraf ./esm && tsc --outDir esm --module es2015",
-    "watch": "tsc --outDir esm --module es2015 --watch",
+    "build": "zshy",
     "lint": "eslint --fix ./src"
   }
 }
